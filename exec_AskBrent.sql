@@ -1,0 +1,1 @@
+exec adm.dbo.sp_AskBrent @ExpertMode=1, @Seconds=30

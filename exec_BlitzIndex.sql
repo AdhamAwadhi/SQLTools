@@ -2,7 +2,7 @@ declare @database varchar(8000) = db_name()
 
 exec Adm.dbo.sp_BlitzIndex 
 	@databasename = @database,
-	@mode = 1
+	@mode = 3
 	--@filter = 3
 		
 /*
@@ -14,4 +14,3 @@ exec Adm.dbo.sp_BlitzIndex
 	@filter tinyint = 0 0=no filter (default). 1=No low-usage warnings for objects with 0 reads. 2=Only warn for objects >= 500MB 
 		--Note:@filter doesn't do anything unless @mode=0
 */
-

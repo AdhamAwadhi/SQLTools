@@ -1,31 +1,48 @@
-select top 100 *
+select top 1000 mg.*
 from sys.dm_exec_query_memory_grants mg
 	outer apply sys.dm_exec_query_plan(mg.plan_handle) p	
 	outer apply sys.dm_exec_sql_text(mg.sql_handle) t 
 where session_id != @@SPID	
-order by requested_memory_kb desc
 
-select --'kill ' + convert(varchar(10), session_id),
-		*,
-		case when charindex(':', resource_description) > 0 then  db_name(left(resource_description, charindex(':', resource_description) - 1)) else null end as DatabaseName
-from sys.dm_os_waiting_tasks
-where wait_type NOT IN (	
-	'CLR_SEMAPHORE', 'LAZYWRITER_SLEEP', 'RESOURCE_QUEUE', 'SLEEP_TASK','SLEEP_SYSTEMTASK', 
-	'SQLTRACE_BUFFER_FLUSH', 'WAITFOR', 'LOGMGR_QUEUE',  'CHECKPOINT_QUEUE', 'REQUEST_FOR_DEADLOCK_SEARCH', 
-	'XE_TIMER_EVENT', 'BROKER_TO_FLUSH', 'BROKER_TASK_STOP', 'CLR_MANUAL_EVENT', 'CLR_AUTO_EVENT', 
-	'DISPATCHER_QUEUE_SEMAPHORE', 'FT_IFTS_SCHEDULER_IDLE_WAIT', 'XE_DISPATCHER_WAIT', 'XE_DISPATCHER_JOIN', 
-	'BROKER_EVENTHANDLER', 'TRACEWRITE', 'FT_IFTSHC_MUTEX', 'SQLTRACE_INCREMENTAL_FLUSH_SLEEP',
-	'BROKER_RECEIVE_WAITFOR', 'ONDEMAND_TASK_QUEUE', 'DBMIRROR_EVENTS_QUEUE',
-	'DBMIRRORING_CMD', 'BROKER_TRANSMITTER', 'SQLTRACE_WAIT_ENTRIES',
-	'SLEEP_BPOOL_FLUSH', 'SQLTRACE_LOCK', 'DIRTY_PAGE_POLL', 'HADR_FILESTREAM_IOMGR_IOCOMPLETION',
-	'SP_SERVER_DIAGNOSTICS_SLEEP', 'CXPACKET')
---	and wait_type = 'RESOURCE_SEMAPHORE_QUERY_COMPILE'
-and session_id > 50		 
+order by requested_memory_kb desc,
+		query_cost desc
+
+SELECT
+    [owt].[session_id],
+    [owt].[exec_context_id],
+    [ot].[scheduler_id],
+    [owt].[wait_duration_ms],
+    [owt].[wait_type],
+    [owt].[blocking_session_id],	 
+    [owt].[resource_description],
+    CASE [owt].[wait_type]
+        WHEN N'CXPACKET' THEN
+            RIGHT ([owt].[resource_description],
+                CHARINDEX (N'=', REVERSE ([owt].[resource_description])) - 1)
+        ELSE NULL
+    END AS [Node ID],
+    [es].[program_name],
+    [est].text,
+    [er].[database_id],
+    --[eqp].[query_plan],
+    [er].[cpu_time]
+FROM sys.dm_os_waiting_tasks [owt]
+INNER JOIN sys.dm_os_tasks [ot] ON [owt].[waiting_task_address] = [ot].[task_address]
+INNER JOIN sys.dm_exec_sessions [es] ON [owt].[session_id] = [es].[session_id]
+INNER JOIN sys.dm_exec_requests [er] ON [es].[session_id] = [er].[session_id]
+OUTER APPLY sys.dm_exec_sql_text ([er].[sql_handle]) [est]
+OUTER APPLY sys.dm_exec_query_plan ([er].[plan_handle]) [eqp]
+WHERE [es].[is_user_process] = 1
+	--and [owt].[session_id] = 237
+ORDER BY
+    [owt].[session_id],
+    [owt].[exec_context_id];
+GO	 
 
 exec adm.dbo.sp_WhoIsActive 
 --@help = 1	
-	--@filter  = '63',
-	--@filter_type  = 'session',
+	--@filter  = '[login]',
+	--@filter_type  = 'login',
 	@get_full_inner_text = 0,
 	@get_outer_command = 1,
 	@show_own_spid = 1,
@@ -38,3 +55,6 @@ exec adm.dbo.sp_WhoIsActive
 	@find_block_leaders = 1,
 	@get_additional_info = 1,
 	@delta_interval = 0
+
+
+	
