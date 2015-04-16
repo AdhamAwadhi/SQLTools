@@ -24,4 +24,5 @@ SELECT session_id,
 FROM sys.dm_db_task_space_usage 
 where session_id > 50
 GROUP BY session_id
+having SUM(internal_objects_alloc_page_count) * 8. / 1024 / 1024 > 0
 order by session_id
