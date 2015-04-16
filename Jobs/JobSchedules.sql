@@ -228,7 +228,7 @@ SELECT
 FROM         msdb.dbo.sysjobs j
 			 INNER JOIN msdb.dbo.sysjobschedules js ON j.job_id = js.job_id 
 			 INNER JOIN msdb.dbo.sysschedules s ON js.schedule_id = s.schedule_id
-where j.name like '%index%'
-	or j.name like '%mainte%'
-	or j.name like '%statis%'
+--where j.name like '%index%'
+--	or j.name like '%mainte%'
+--	or j.name like '%statis%'
 order by 2

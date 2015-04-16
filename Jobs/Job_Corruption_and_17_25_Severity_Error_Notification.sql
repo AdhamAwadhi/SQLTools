@@ -1,8 +1,8 @@
 USE [msdb]
 GO
 
-declare @OperatorName sysname = 'SQLReport',
-		@SeverityNum int = 17,
+declare @OperatorName sysname = 'DBA',
+		@SeverityNum int = 16,
 		@SeverityName sysname,
 		@ErrNum int = 823,
 		@ErrName sysname,
@@ -10,7 +10,7 @@ declare @OperatorName sysname = 'SQLReport',
 
 --select * from msdb.dbo.sysoperators where name = @OperatorName
 
---Create alers for severity from 17 to 25
+--Create alers for severity from 16 to 25
 while @SeverityNum <= 25 begin
 	
 	set @SeverityName = 'Severity 0' + convert(varchar(10), @SeverityNum)
