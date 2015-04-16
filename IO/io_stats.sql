@@ -15,8 +15,8 @@ FROM    sys.dm_io_virtual_file_stats(NULL, NULL) AS fs
         INNER JOIN sys.master_files AS mf WITH ( NOLOCK ) ON fs.database_id = mf.database_id
                                                              AND fs.[file_id] = mf.[file_id]
 --where fs.database_id = 2
---where mf.physical_name like 'D:%'
-ORDER BY avg_io_stall_ms DESC
+--ORDER BY avg_io_stall_ms DESC
+order by [avg_write_stall_ms]  desc
 OPTION  ( RECOMPILE );
 
 
