@@ -1,7 +1,8 @@
 select	--'drop index ' + i.name + ' on ' + t.name + char(13) + 'go'
-		case when i.is_unique = 1 then null else  'alter index ' + i.name + ' on ' + t.name + ' disable ' end as DropCmd, 
+		case when i.is_unique = 1 then null else  'alter index ' + i.name + ' on '+ quotename(s.name) + '.' + quotename(t.name) + ' disable ' end as DropCmd, 
 		DBName = db_name(database_id),
 		TableName = t.name,
+		i.fill_factor,
 		i.is_disabled,
 		i.is_unique,
 		i.is_unique_constraint,
@@ -22,6 +23,7 @@ select	--'drop index ' + i.name + ' on ' + t.name + char(13) + 'go'
 		--(u.user_seeks + u.user_scans +  u.user_lookups) * 1. / u.user_updates  
 from sys.dm_db_index_usage_stats u with(nolock)
 		join sys.tables t with(nolock) on t.object_id = u.object_id
+		join sys.schemas s on s.schema_id = t.schema_id
 		left join sys.indexes i with(nolock) on i.object_id = u.object_id and i.index_id = u.index_id and i.type_desc != 'heap'
 		left join sys.partitions p with(nolock) on p.object_id = t.object_id and p.index_id = i.index_id 
 
@@ -49,8 +51,8 @@ from sys.dm_db_index_usage_stats u with(nolock)
                                     ), 1, 2, '' ) as IncludedColumns ) ic
 
 where database_id = db_id()
-	and i.is_unique = 0
-	and i.is_unique_constraint = 0
+	--and i.is_unique = 0
+	--and i.is_unique_constraint = 0
 	--and t.name = 'tb_CT_Link_S'
 	and u.user_scans = 0
 	and u.user_seeks = 0
