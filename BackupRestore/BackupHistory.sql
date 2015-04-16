@@ -14,4 +14,3 @@ from msdb..backupfile f
 		join msdb..backupmediafamily m on m.media_set_id = s.media_set_id
 where s.backup_start_date > getdate() -14
 order by s.backup_finish_date desc
-
