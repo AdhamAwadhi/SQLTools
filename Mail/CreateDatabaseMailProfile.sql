@@ -1,16 +1,21 @@
 -- Create a Database Mail account
 
-declare @MailServerName sysname = 'MailServer'
+declare @MailServerName sysname = 'mail.server.tld'
 declare @DisplayName sysname = 'SQL-'+ replace(@@ServerName, '\', '-') 
-declare @ServerEmail sysname = @DisplayName  + '@domain.tld'
+declare @ServerEmail sysname = 'no_reply@server.tld'
 
 exec msdb.dbo.sysmail_add_account_sp
     @account_name = @MailServerName,
     @description = '',
     @email_address = @ServerEmail,
-    @replyto_address = 'noreply@domain.tld',
+    @replyto_address = @ServerEmail,
     @display_name = @DisplayName,
-    @mailserver_name = 'MailServer.domain.tld' ;
+    @mailserver_name = @MailServerName ,
+	@port = 25,
+    @username = 'smtp_user',
+	@password = 'smtp_pass' ,
+	@enable_ssl = 0
+
 
 -- Create a Database Mail profile
 
