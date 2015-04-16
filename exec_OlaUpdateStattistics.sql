@@ -1,6 +1,10 @@
 EXECUTE adm.dbo.IndexOptimize
-	@Databases = 'DB',
+	@Databases = 'ALL_DATABASES',
 	@FragmentationLow = NULL,
 	@FragmentationMedium = NULL,
 	@FragmentationHigh = NULL,
-	@UpdateStatistics = 'ALL'
+	@UpdateStatistics = 'ALL',
+	@OnlyModifiedStatistics = 'Y',
+	@Execute = 'Y',
+	@LogToTable = 'N',
+	@LockTimeout = '300'

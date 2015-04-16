@@ -1,11 +1,14 @@
 exec adm.dbo.DatabaseBackup
-	@Databases = 'DB',
-	@Directory = '\\Backup1\BACKUP',
+	@Databases = 'USER_DATABASES',
+	@Directory = 'N:\BACKUP',
 	@BackupType = 'FULL',
-	@Verify = 'Y',
+	@Verify = 'N',
 	@Compress = 'Y',
 	@CheckSum = 'Y',
-	@CleanupTime = 168, --one week
-	@LogToTable = 'Y',
+	--@CleanupTime = 168, --one week
+	@LogToTable = 'N',
 	@Execute = 'Y'
+	--@BufferCount = 50,
+ --    @MaxTransferSize = 4194304,
+ --    @NumberOfFiles = 48
 
