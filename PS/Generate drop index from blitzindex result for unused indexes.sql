@@ -1,0 +1,1 @@
+cat C:\tmp\odx_list.sql | % {$_ -replace '0 reads: ', ''} | % {$_ -replace '\(.*\)', ''} | % { 'drop index [' + ($_.Split('.')[2] -replace ' ', '') + '] on [' + $_.Split('.')[0] + '].[' + $_.Split('.')[1] + ']'} >> C:\tmp\idx_list_res.sql

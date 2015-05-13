@@ -1,0 +1,16 @@
+ls -Recurse -Include ('*.full', '*.diff', '*.tlog') | select Name, CreationTime
+
+ls -Recurse -Exclude ('*.full') -Include('*.*') | rename-item -NewName { 'monthly_' + $_.name }
+ls -Exclude monthly* | rename-item -NewName { $_.name -replace '^', 'monthly_'}
+
+ls -Recurse -Include ('Tra*2013-10-28*.full', 'Tra*2013-11-01*.diff') |select Name, CreationTime | Move-Item -Destination E:\backup\month
+
+(get-date(Get-Date -Format D)).AddDays(- (get-date).DayOfWeek - 6)
+
+Where-Object {$_.CreationTime -gt (get-date(Get-Date -Format D)).AddDays(- (get-date).DayOfWeek - 6)}
+
+ls -Recurse -Include ('*.full', '*.diff', '*.tlog') -Exclude ('monthly_*') | Where-Object {$_.CreationTime -lt (get-date(Get-Date -Format D)).AddDays(- (get-date).DayOfWeek - 6)} | Sort-Object CreationTime | Remove-Item
+
+
+#remove log older 2 days
+ls -Recurse -Include ('*.trn', '*.tlog') |Where-Object {$_.Creati onTime -lt (get-date(Get-Date -Format D)).AddDays(-2)} | Remove-Item
