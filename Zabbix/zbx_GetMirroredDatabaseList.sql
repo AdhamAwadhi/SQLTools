@@ -9,8 +9,10 @@ go
 alter procedure zbx.GetMirroredDatabaseList
 as begin
     set nocount on
+
+    declare @xml xml = null
     
-    select convert(xml,'{"data":['+ dd + ' ]}') 
+    select @xml = convert(xml,'{"data":['+ dd + ' ]}') 
     from ( 
 		  (
 			 select STUFF(
@@ -25,8 +27,9 @@ as begin
 		  )
     ) as df
 
+    if @xml is null set @xml = '{"data":[]}'
 
-
+    select @xml
 
 end
 go
