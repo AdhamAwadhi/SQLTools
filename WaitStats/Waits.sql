@@ -1,3 +1,6 @@
+--Author: Paul Randal
+--Source: http://www.sqlskills.com/blogs/paul/post/Wait-statistics-or-please-tell-me-where-it-hurts.aspx
+
 WITH [Waits] AS
     (SELECT
         [wait_type],
