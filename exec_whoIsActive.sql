@@ -1,11 +1,32 @@
-select top 1000 mg.*
+select top 1000 
+	mg.session_id,
+	mg.dop,
+	mg.scheduler_id,
+	mg.is_small,
+	mg.is_next_candidate,
+	mg.wait_order,
+	mg.wait_time_ms,
+	mg.request_time,
+	mg.grant_time,
+	datediff(ms, mg.request_time, mg.grant_time) as [GrantDuration (ms)],
+	mg.requested_memory_kb,
+	mg.granted_memory_kb,
+	mg.required_memory_kb,
+	mg.used_memory_kb,
+	mg.max_used_memory_kb,
+	mg.ideal_memory_kb,
+	mg.query_cost,
+	mg.pool_id
 from sys.dm_exec_query_memory_grants mg
-	outer apply sys.dm_exec_query_plan(mg.plan_handle) p	
-	outer apply sys.dm_exec_sql_text(mg.sql_handle) t 
+	--outer apply sys.dm_exec_query_plan(mg.plan_handle) p	
+	--outer apply sys.dm_exec_sql_text(mg.sql_handle) t 
 where session_id != @@SPID	
-
-order by requested_memory_kb desc,
-		query_cost desc
+	and mg.grant_time is null  -- Only queries waiting for memory grants
+order by mg.requested_memory_kb desc,
+	mg.query_cost desc
+	
+select *
+from sys.dm_exec_query_resource_semaphores
 
 SELECT
     [owt].[session_id],
