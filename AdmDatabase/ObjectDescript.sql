@@ -5,7 +5,7 @@ go
 alter procedure dbo.ObjectDescript
 	@ObjectName varchar(512),
 	@Descript sql_variant
-
+	with execute as owner
 as begin
 	set nocount on;
 	
@@ -23,18 +23,23 @@ as begin
 		if PATINDEX ('%.%', @ObjectName) > 0 begin
 			set @Object = @ObjectName
 		end else begin
-			raiserror ( 'Incorrect object name: %s', 16,1, @ObjectName)
-			return
+			set @Schema = @ObjectName
+			select @Schema, DB_NAME()
+			if SCHEMA_ID(@Schema) is null begin
+				raiserror ( 'Incorrect object name: %s', 16,1, @ObjectName)
+				return
+			end
 		end
 
 	set @Object_ID = Object_id(@Object)
-
-	if @Object_ID is null begin
+	
+	if @Object_ID is null and @Schema is null begin
 		raiserror ( 'Object %s not found', 16,1, @Object)
 		return
 	end 
 
-	set @Schema = OBJECT_SCHEMA_NAME(@Object_ID)
+	if isnull(@Schema, '') = '' 
+		set @Schema = OBJECT_SCHEMA_NAME(@Object_ID)
 
 
 	if isnull(@Schema, '') = '' begin
@@ -50,24 +55,34 @@ as begin
 		return
 	end
 
-	
 	select @ObjectType = case  O.[Type] 
 							when 'U' then 'TABLE'
 							when 'P' then 'PROCEDURE'
 							when 'FN' then 'FUNCTION'
 							when 'TR' then 'TRIGGER'
 							when 'V' then 'VIEW'
-						end
+						end,
+			@Object = O.Name,
+			@Schema = OBJECT_SCHEMA_NAME(o.object_id)
 	from sys.objects O
 	where object_id = @Object_ID
 	
-	set @Object = replace(@Object, @Schema + '.', '')
-
-	exec sys.sp_addextendedproperty 
-			@name = N'MS_Description',
-			@value = @Descript,
-			@level0type = N'SCHEMA', @level0name = @Schema,
-			@level1type = @ObjectType, @level1name = @Object,
-			@level2type = @Level2Type, @level2name = @Column
+	if exists (select 1 from fn_listextendedproperty('MS_Description', 'schema', @Schema, @ObjectType, @Object, @Level2Type, @Column)) begin
+		exec sys.sp_updateextendedproperty 
+				@name = N'MS_Description',
+				@value = @Descript,
+				@level0type = N'SCHEMA', @level0name = @Schema,
+				@level1type = @ObjectType, @level1name = @Object,
+				@level2type = @Level2Type, @level2name = @Column
+	end else begin
+		exec sys.sp_addextendedproperty 
+				@name = N'MS_Description',
+				@value = @Descript,
+				@level0type = N'SCHEMA', @level0name = @Schema,
+				@level1type = @ObjectType, @level1name = @Object,
+				@level2type = @Level2Type, @level2name = @Column
+	end
 end
+go
+grant execute, view definition on object::dbo.ObjectDescript to public 
 go
